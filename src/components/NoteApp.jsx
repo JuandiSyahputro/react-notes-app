@@ -114,7 +114,6 @@ function NoteApp() {
     try {
       const response = await notesService.putNote(id_note, payload);
       if (response.status_code === 200) {
-        setIsLoading(true);
         handleUpdateNoteItems(response.data.note_id);
       } else {
         console.log('Failed to update note');
