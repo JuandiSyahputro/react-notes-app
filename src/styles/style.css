@@ -29,9 +29,14 @@ textarea::placeholder {
   color: #aaa;
   font-weight: bold;
 }
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
+}
+
+.scroll__bar-items-note::-webkit-scrollbar {
+  width: 3px;
 }
 
 ::-webkit-scrollbar-track {
