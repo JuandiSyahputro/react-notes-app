@@ -23,6 +23,7 @@ function NoteApp() {
   const [fields, setFields] = useState([{ value: '', is_completed: 0 }]);
   const [editFields, setEditFields] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmit, setIsSubmit] = useState(false);
   const [dateFilter, setDateFilter] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [dataId, setDataId] = useState({});
@@ -48,16 +49,17 @@ function NoteApp() {
       } catch (error) {
         console.log(error);
       } finally {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 1500);
+        setIsLoading(false);
+        setIsSubmit(false);
       }
     };
 
     if (isLoading) {
-      handleGetNotes(`?filter-date=${dateFilter}`);
+      setTimeout(async () => {
+        handleGetNotes(`?filter-date=${dateFilter}`);
+      }, 1500);
     }
-  }, [isLoading, dateFilter]);
+  }, [isLoading, dateFilter, isSubmit]);
 
   useEffect(() => {
     if (dataId?.date_note) {
@@ -100,6 +102,9 @@ function NoteApp() {
       const response = await notesService.postNote(newNote);
       if (response.status_code === 201) {
         handleAddNoteItems(response.data.note_id);
+        setIsSubmit(true);
+      } else {
+        console.log('Failed to add note');
       }
     } catch (error) {
       console.log(error);
@@ -233,6 +238,7 @@ function NoteApp() {
           title: '',
           date_note: '',
         });
+        setAddNote({ title: '', date_note: '' });
         setFields([{ value: '', is_completed: 0 }]);
         setDateFilter('');
         setIsLoading(true);
@@ -339,6 +345,7 @@ function NoteApp() {
           handleChange={handleChange}
           fields={fields}
           setFields={setFields}
+          isSubmit={isSubmit}
         />
       </div>
       <div className="w-full lg:w-2/3">
@@ -349,6 +356,7 @@ function NoteApp() {
           handleEdit={handleEdit}
           handleNote={handleNote}
           onChangeCheckbox={onChangeCheckbox}
+          isLoading={isLoading}
         />
       </div>
 

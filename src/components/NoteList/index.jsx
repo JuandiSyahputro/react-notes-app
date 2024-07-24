@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import lottie from '../../../public/lottie.gif';
 import NoteArchive from './NoteArchive';
 import NoteItem from './NoteItem';
+import { Spinner } from 'flowbite-react';
 export const NoteList = (props) => {
   const {
     notesList,
@@ -10,6 +11,7 @@ export const NoteList = (props) => {
     handleEdit,
     archive,
     onChangeCheckbox,
+    isLoading,
   } = props;
   const [showArchive, setShowArchive] = useState(false);
 
@@ -27,6 +29,14 @@ export const NoteList = (props) => {
               onChangeCheckbox={onChangeCheckbox}
             />
           ))
+        ) : notesList.length === 0 && isLoading ? (
+          <div className="grid place-items-center w-full">
+            <Spinner
+              aria-label="Spinner button example"
+              size="xl"
+              color={'purple'}
+            />
+          </div>
         ) : (
           <div className="grid place-items-center h-full w-full">
             <div className="grid place-items-center">
