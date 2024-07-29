@@ -14,18 +14,20 @@ import {
   TextInput,
 } from 'flowbite-react';
 import IconRemove from '../../public/icon-trash.svg';
+import IconAdd from '../../public/icon-plus.svg';
 
 function NoteApp() {
   const maxLength = 50;
   const [notesList, setNotesList] = useState([]);
   const [searchNote, setSearchNote] = useState('');
   const [archive, setArchive] = useState([]);
-  const [fields, setFields] = useState([{ value: '', is_completed: 0 }]);
+  const [fields, setFields] = useState([]);
   const [editFields, setEditFields] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmit, setIsSubmit] = useState(false);
   const [dateFilter, setDateFilter] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
   const [dataId, setDataId] = useState({});
   const [date, setDate] = useState('');
   const [addNote, setAddNote] = useState({
@@ -51,13 +53,18 @@ function NoteApp() {
       } finally {
         setIsLoading(false);
         setIsSubmit(false);
+        setIsEdit(false);
       }
     };
 
     if (isLoading) {
-      setTimeout(async () => {
+      if (!isEdit) {
+        setTimeout(async () => {
+          handleGetNotes(`?filter-date=${dateFilter}`);
+        }, 1500);
+      } else {
         handleGetNotes(`?filter-date=${dateFilter}`);
-      }, 1500);
+      }
     }
   }, [isLoading, dateFilter, isSubmit]);
 
@@ -71,8 +78,14 @@ function NoteApp() {
     }
   }, [dataId]);
 
+  useEffect(() => {
+    if (notesList) {
+      const dataById = notesList.find((item) => item.id === dataId?.id);
+      setDataId(dataById);
+    }
+  }, [notesList]);
+
   const handleSubmit = (e) => {
-    e.preventDefault();
     if (!addNote.title && !addNote.date_note) return;
 
     const newListNote = {
@@ -171,6 +184,7 @@ function NoteApp() {
 
       if (response.status_code === 200) {
         setIsLoading(true);
+        setIsEdit(true);
       } else {
         console.log('Failed to update note items');
       }
@@ -217,31 +231,39 @@ function NoteApp() {
     });
   };
 
-  const handleAddNoteItems = async (id) => {
+  const handleAddNoteItems = async (id, type) => {
     try {
       const payload = {
         id_notes: id,
         content: [],
       };
 
-      fields.map((field) => {
-        payload.content.push({
-          title: field.value,
-          is_completed: field.is_completed,
+      if (type === 'edit') {
+        payload.content.push({ title: '', is_completed: 0 });
+      } else {
+        fields.map((field) => {
+          payload.content.push({
+            title: field.value,
+            is_completed: field.is_completed,
+          });
         });
-      });
+      }
 
       const response = await notesService.postItemsNote(payload);
 
       if (response.status_code === 201) {
-        setEditNote({
-          title: '',
-          date_note: '',
-        });
-        setAddNote({ title: '', date_note: '' });
-        setFields([{ value: '', is_completed: 0 }]);
-        setDateFilter('');
         setIsLoading(true);
+        if (type === 'edit') {
+          setIsEdit(true);
+        } else {
+          setEditNote({
+            title: '',
+            date_note: '',
+          });
+          setAddNote({ title: '', date_note: '' });
+          setFields([]);
+          setDateFilter('');
+        }
       } else {
         console.log('Failed to add note items');
       }
@@ -285,6 +307,7 @@ function NoteApp() {
 
         setDataId(dataById);
         setIsLoading(true);
+        setIsEdit(true);
       } else {
         console.log('Failed to delete note items');
       }
@@ -319,6 +342,10 @@ function NoteApp() {
     }
   };
 
+  const handleEditAddNoteItems = (id) => {
+    handleAddNoteItems(id, 'edit');
+  };
+
   const filteredNotes = notesList.filter((note) =>
     note.title.toLowerCase().includes(searchNote.toLowerCase())
   );
@@ -326,7 +353,7 @@ function NoteApp() {
   const filteredArchive = archive.filter((note) =>
     note.title.toLowerCase().includes(searchNote.toLowerCase())
   );
-
+  // console.log(notesList);
   return (
     <section className="flex flex-wrap lg:flex-nowrap lg:justify-between gap-x-5 py-12 px-5">
       <div className="w-full lg:w-1/4">
@@ -406,6 +433,15 @@ function NoteApp() {
             <div>
               <div className="mb-2 block">
                 <Label className="text-slate-100" value="List TodoList" />
+              </div>
+              <div className="mb-1">
+                <Button
+                  className="bg-blue-500 w-full"
+                  onClick={() => handleEditAddNoteItems(dataId?.id)}
+                >
+                  <img src={IconAdd} alt="" className="mr-2" />
+                  <span>Tambah List TodoList</span>
+                </Button>
               </div>
               <div className="h-[250px] overflow-y-auto scroll__bar-items-note pr-2">
                 {dataId?.notes_item?.map((item) => (
